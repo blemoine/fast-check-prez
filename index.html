@@ -1,40 +1,430 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
 
-		<title>reveal.js</title>
+    <title>Property Based testing with Fast-Check</title>
 
-		<link rel="stylesheet" href="dist/reset.css">
-		<link rel="stylesheet" href="dist/reveal.css">
-		<link rel="stylesheet" href="dist/theme/black.css">
+    <link rel="stylesheet" href="dist/reset.css" />
+    <link rel="stylesheet" href="dist/reveal.css" />
+    <link rel="stylesheet" href="dist/theme/black.css" />
 
-		<!-- Theme used for syntax highlighted code -->
-		<link rel="stylesheet" href="plugin/highlight/monokai.css">
-	</head>
-	<body>
-		<div class="reveal">
-			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
-			</div>
-		</div>
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="plugin/highlight/monokai.css" />
+    <style>
+      pre {
+        width: 95%;
+      }
+      .reveal pre code {
+          max-height: 600px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1>Property based testing</h1>
 
-		<script src="dist/reveal.js"></script>
-		<script src="plugin/notes/notes.js"></script>
-		<script src="plugin/markdown/markdown.js"></script>
-		<script src="plugin/highlight/highlight.js"></script>
-		<script>
-			// More info about initialization & config:
-			// - https://revealjs.com/initialization/
-			// - https://revealjs.com/config/
-			Reveal.initialize({
-				hash: true,
+          <img
+            src="img/logo.png"
+            alt="fast-check's logo"
+            style="position: relative; left: 50px"
+          />
+        </section>
+        <section>
+          <h2>Who am I?</h2>
+          <ul
+            style="
+              display: inline-block;
+              width: 600px;
+              vertical-align: top;
+              position: relative;
+            "
+          >
+            <li>Benoît Lemoine</li>
+            <li>
+              Fullstack developer <br />(TS, Scala, Rust, ...) <br />
+              especially interested in functional programming and type
+              systems<br />
+            </li>
+            <li>
+              <a href="https://lemoine-benoit.medium.com/"
+                >https://lemoine-benoit.medium.com/</a
+              >
+            </li>
 
-				// Learn about plugins: https://revealjs.com/plugins/
-				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
-			});
-		</script>
-	</body>
+            <li>
+              <a href="https://twitter.com/benoit_lemoine">@benoit_lemoine</a>
+            </li>
+          </ul>
+          <img
+            style="display: inline-block; width: 250px; vertical-align: top"
+            src="img/Moloch.png"
+            alt="Most beautiful animal in the world: the Moloch (aka. thorny devil)"
+          />
+        </section>
+
+        <section>
+          <h2>"Example based" testing limitations</h2>
+        </section>
+
+        <section>
+          <h2>Example</h2>
+          <pre><code class="typescript" data-trim>
+// Expedition fees are 0.9 % of the price.
+// If the fees are above the threshold, expedition is free
+export function getFees(price: number,
+                        freeThreshold: number): number {
+  const expeditionFeesRate = 0.009;
+  const expeditionFees = expeditionFeesRate * price;
+  return expeditionFees >= freeThreshold ? 0 : expeditionFees;
+}
+					</code></pre>
+        </section>
+
+        <section>
+          <h2>Tests</h2>
+          <pre><code data-trim class="typescript">
+describe("getFees", () => {
+  test("return 0 if the price is 0", () => {
+    expect(getFees(0, 10)).toStrictEqual(0);
+  });
+  test("return 0 if the freeThreshold is 0", () => {
+    expect(getFees(100, 0)).toStrictEqual(0);
+  });
+  test("return 0.9% of the price if the fees are below the threshold", () => {
+    expect(getFees(1000, 10)).toStrictEqual(9);
+  });
+  test("return 0 if the fees are equal to the threshold", () => {
+    expect(getFees(1000, 9)).toStrictEqual(0);
+  });
+  test("return 0 if the fees are above to the threshold", () => {
+    expect(getFees(1000, 7)).toStrictEqual(0);
+  });
+});
+				</code></pre>
+        </section>
+
+        <section>
+          <h2>But... sometimes, it doesn't work</h2>
+          <pre><code data-trim class="typescript">
+  test("return 0 if it the fees are equal to the threshold", () => {
+        expect(getFees(3000, 27)).toStrictEqual(0);
+    });
+		  </code></pre>
+          <pre><code data-trim class="typescript">
+getFees › return 0 if the fees are equal to the threshold
+
+expect(received).toStrictEqual(expected) // deep equality
+
+Expected: 0
+Received: 26.999999999999996
+			</code></pre>
+        </section>
+
+        <section>
+          <h2>
+            How can we catch those kind of errors <em>before they happen in
+              production</em>?
+          </h2>
+
+          <p class="fragment">We must find invalid examples</p>
+        </section>
+
+        <section>
+          <h2>How can we find such examples?</h2>
+          <ul>
+            <li class="fragment">Generate randomly the values to test</li>
+            <li class="fragment">Execute the tests a high number of times</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Property based testing</h2>
+          <h3>Fast-Check</h3>
+          <a href="https://github.com/dubzzz/fast-check"
+            >https://github.com/dubzzz/fast-check</a
+          >
+        </section>
+
+        <section>
+          <h2>Simple Example</h2>
+          <pre><code data-trim class="typescript">
+test("return 0 if the threshold is 0", () => {
+    fc.assert(
+      fc.property(fc.nat(), (price: number) => {
+        expect(getFees(price, 0)).toStrictEqual(0);
+      })
+    );
+});
+			  </code></pre>
+        </section>
+
+        <section>
+          <h2>Another example</h2>
+          <pre><code data-trim class="typescript">
+test("return something smaller than the threshold", () => {
+  fc.assert(
+    fc.property(fc.nat(), fc.nat(),
+      (price: number, threshold: number) => {
+        expect(getFees(price, threshold)).toBeLessThanOrEqual(
+          threshold
+        );
+    })
+  );
+});
+			  </code></pre>
+        </section>
+
+        <section>
+          <h2>Arbitraries</h2>
+          <ul>
+            <li class="fragment">fc.nat(), fc.integer(), fc.float(), fc.double(), etc.</li>
+            <li class="fragment">fc.string(), fc.asciiString(), fc.unicodeString(), etc.</li>
+            <li class="fragment">fc.ipV4(), fc.uuid(), fc.emailAddress(), etc.</li>
+            <li class="fragment">fc.array(anotherArbitrary), fc.func(anotherArbitrary), etc.</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Custom Arbitrary</h2>
+          <pre><code data-trim class="typescript">
+type User = {id: string, age: number, email: string | null };
+
+const arbUser: Arbitrary&lt;User> = fc.record({
+	id: fc.uuid(),
+    age: fc.nat({max: 99}),
+    email: fc.option(fc.emailAddress())
+});
+
+it('supports custom arbitrary', () => {
+	fc.assert(fc.property(arbUser, (user:User) =>
+      /* test something */));
+});
+			  </code></pre>
+        </section>
+
+        <section>
+          <h2>Arbitraries can be filtered for invalid values</h2>
+          <pre><code data-trim class="typescript">
+const arbEven = fc.integer().filter(n => n % 2 === 0)
+			  </code></pre>
+          <p class="fragment">
+            Beware of "too much" filtering leading to fast-check not finding
+            enough test cases to work
+          </p>
+        </section>
+
+        <section>
+          <h2>Arbitraries form a functor</h2>
+          <h3>(there is a <code>map</code> method)</h3>
+          <pre><code data-trim class="typescript">
+const arbPrice = fc.nat().map(priceInCents => {
+  return Math.round(priceInCents * 100) / 100
+});
+			  </code></pre>
+        </section>
+
+        <section>
+          <h2>Arbitraries form a monad</h2>
+          <h3>
+            (there is a <code>chain</code> method and a
+            <code>constant</code> function)
+          </h3>
+          <pre><code data-trim class="typescript">
+// Generate a range [a,b] and ensure b > a
+const arbRange = fc.nat().chain(min => {
+  return fc.tuple(fc.constant(min), fc.integer({min})
+})
+			  </code></pre>
+        </section>
+
+        <section>
+          <h2>Shrinking</h2>
+          <p>Searching for the minimal failing case</p>
+          <pre><code class="typescript" data-trim>
+// Expedition fees are 0.9 % of the price.
+// If the fees are above the threshold, expedition is free
+export function getFees(price: number,
+                        freeThreshold: number): number {
+  const expeditionFeesRate = 0.009;
+  const expeditionFees = expeditionFeesRate * price;
+  return expeditionFees >= freeThreshold ? 0 : expeditionFees;
+}
+					</code></pre>
+          <pre><code data-trim class="typescript">
+ fc.assert(
+  fc.property(fc.nat(), (n) => {
+    expect(getFees(n * 1000, n * 9)).toStrictEqual(0);
+  })
+);
+</code></pre>
+        </section>
+
+        <section>
+          <h2>Shrinking</h2>
+          <pre><code data-trim>
+Property failed after 2 tests
+{ seed: 1246452816, path: "1:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:1", endOnFailure: true }
+Counterexample: [6]
+Shrunk 26 time(s)
+Got error: Error: expect(received).toStrictEqual(expected) // deep equality
+
+Expected: 0
+Received: 53.99999999999999
+              </code></pre>
+        </section>
+
+        <section>
+          <h2>Seeds / replay</h2>
+          <pre><code data-trim class="typescript">
+ fc.assert(
+  fc.property(fc.nat(), (n) => {
+    expect(getFees(n * 1000, n * 9)).toStrictEqual(0);
+  }),
+  { seed: 1246452816,
+    path: "1:1:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:0:1",
+    endOnFailure: true }
+);
+</code></pre>
+        </section>
+
+        <section>
+          <h2>Don't copy/paste the implementation in the test</h2>
+          <pre><code class="typescript" data-trim>
+// Expedition fees are 0.9 % of the price.
+// If the fees are above the threshold, expedition is free
+export function getFees(price: number,
+                        freeThreshold: number): number {
+  const expeditionFeesRate = 0.009;
+  const expeditionFees = expeditionFeesRate * price;
+  return expeditionFees >= freeThreshold ? 0 : expeditionFees;
+}
+					</code></pre>
+          <pre><code data-trim class="typescript">
+ // this won't catch any error for example
+ fc.assert(
+  fc.property(fc.nat(), (n) => {
+    expect(getFees(n , n * 0.009)).toStrictEqual(0);
+  })
+);
+</code></pre>
+        </section>
+
+        <section>
+          <h2>Real use case</h2>
+          <h3>Serialization / Deserialization</h3>
+          <pre><code data-trim class="typescript">
+type Permission = {
+  read:boolean, write: boolean, execution: boolean
+};
+function ser({read, write, execution}: Permission): number {
+	return (read ? 0b100 :0) + (write? 0b10 :0) +
+           (execution? 1 :0);
+}
+function deser(permission: number): Permission {
+	return { read: !(permission & 0b100),
+			  write: !(permission & 0b10),
+			  execution: !(permission & 1) }
+}
+		  </code></pre>
+
+          <pre><code data-trim class="typescript">
+test('ser and deser should be inverse of each other', () => {
+	fc.assert(fc.property(fc.nat({max: 7}), (n) =>
+		expect(ser(deser(n)).toStrictEqual(n)
+	))
+})
+			</code></pre>
+        </section>
+
+        <section>
+          <h2>Real use case</h2>
+          <h3>Metamorphic Tests</h3>
+          <pre><code data-trim class="typescript">
+function customSort(arr: number[]): number[] {
+	return arr.sort((a,b) => b - a);
+}
+			</code></pre>
+          <pre><code data-trim class="typescript">
+test('custom sort should be stable', () => {
+	fc.assert(fc.property(fc.array(fc.number()), (arr) => {
+      const shuffledArr = arr.sort(() => 0.5 - Math.random();
+      expect(customSort(arr)).toStrictEqual(
+        customSort(shuffledArr)
+      })
+	))
+})
+			</code></pre>
+        </section>
+
+        <section>
+          <h2>Real use case</h2>
+          <h3>Algebraic Properties</h3>
+            <pre><code data-trim class="typescript">
+          test('Array forms a functor', () => {
+            fc.assert(
+              fc.property(fc.array(fc.number()), fc.func(fc.string()),
+              fc.func(fc.boolean), (arr, f1, f2) => {
+                expect(arr.map(f1).map(f2)).toStrictEqual(
+                  arr.map(x => f2(f1(x)))
+                )
+              });
+          })
+            </code></pre>
+        </section>
+
+        <section>
+          <h2>Real use case</h2>
+          <h3>Generating a domain object</h3>
+          <pre><code data-trim class="typescript">
+type UserCreateInput = {name: string}
+it('should persist the user in the database', () => {
+  return fc.assert(
+   fc.asyncProperty(fc.string(), async (name) => {
+     expect(await saveUser({name})).toHaveProperty('id');
+  })
+})
+        </code></pre>
+        </section>
+
+        <section>
+          <h2>Conclusion</h2>
+          <ul>
+            <li>Useful on the real world</li>
+            <li>But slow down the tests - use sparingly</li>
+            <li>
+              Exists in other technologies: scalacheck (scala), hypothesis
+              (python), quickcheck (haskell), propcheck (ruby), etc.
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Questions?</h2>
+        </section>
+      </div>
+    </div>
+
+    <script src="dist/reveal.js"></script>
+    <script src="plugin/notes/notes.js"></script>
+    <script src="plugin/markdown/markdown.js"></script>
+    <script src="plugin/highlight/highlight.js"></script>
+    <script>
+      // More info about initialization & config:
+      // - https://revealjs.com/initialization/
+      // - https://revealjs.com/config/
+      Reveal.initialize({
+        hash: true,
+
+        // Learn about plugins: https://revealjs.com/plugins/
+        plugins: [RevealMarkdown, RevealHighlight, RevealNotes],
+      });
+    </script>
+  </body>
 </html>

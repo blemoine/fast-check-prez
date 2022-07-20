@@ -33,12 +33,15 @@
     "@babel/core": "^7.14.3",
     "@babel/eslint-parser": "^7.14.3",
     "@babel/preset-env": "^7.14.2",
+    "@babel/preset-typescript": "^7.17.12",
     "@rollup/plugin-babel": "^5.3.0",
     "@rollup/plugin-commonjs": "^19.0.0",
     "@rollup/plugin-node-resolve": "^13.0.0",
+    "@types/jest": "^28.1.0",
     "babel-plugin-transform-html-import-to-string": "0.0.1",
     "colors": "^1.4.0",
     "core-js": "^3.12.1",
+    "fast-check": "^3.0.0",
     "fitty": "^2.3.0",
     "glob": "^7.1.7",
     "gulp": "^4.0.2",
@@ -96,5 +99,8 @@
       "no-eq-null": 2,
       "no-unused-expressions": 0
     }
+  },
+  "dependencies": {
+    "jest": "^28.1.0"
   }
 }
