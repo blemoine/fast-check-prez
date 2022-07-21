@@ -354,7 +354,7 @@ function customSort(arr: number[]): number[] {
           <pre><code data-trim class="typescript">
 test('custom sort should be stable', () => {
 	fc.assert(fc.property(fc.array(fc.number()), (arr) => {
-      const shuffledArr = arr.sort(() => 0.5 - Math.random();
+      const shuffledArr = [...arr].sort(() => 0.5 - Math.random();
       expect(customSort(arr)).toStrictEqual(
         customSort(shuffledArr)
       })
