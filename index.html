@@ -351,13 +351,13 @@ test('ser and deser should be inverse of each other', () => {
           <h3>Metamorphic Tests</h3>
           <pre><code data-trim class="typescript">
 function customSort(arr: number[]): number[] {
-	return arr.sort((a,b) => b - a);
+	return [...arr].sort((a,b) => b - a);
 }
 			</code></pre>
           <pre><code data-trim class="typescript">
 test('custom sort should be stable', () => {
 	fc.assert(fc.property(fc.array(fc.number()), (arr) => {
-      const shuffledArr = arr.sort(() => 0.5 - Math.random();
+      const shuffledArr = [...arr].sort(() => 0.5 - Math.random();
       expect(customSort(arr)).toStrictEqual(
         customSort(shuffledArr)
       })
@@ -365,7 +365,7 @@ test('custom sort should be stable', () => {
 })
 			</code></pre>
         </section>
-
+<!--
         <section>
           <h2>Real use case</h2>
           <h3>Algebraic Properties</h3>
@@ -381,7 +381,7 @@ test('custom sort should be stable', () => {
           })
             </code></pre>
         </section>
-
+-->
         <section>
           <h2>Real use case</h2>
           <h3>Generating a domain object</h3>
