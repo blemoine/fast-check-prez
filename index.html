@@ -79,13 +79,13 @@
         <section>
           <h2>Example</h2>
           <pre><code class="typescript" data-trim>
-// Expedition fees are 0.9 % of the price.
-// If the fees are above the threshold, expedition is free
+// shipping fees are 0.9 % of the price.
+// If the fees are above the threshold, shipping is free
 export function getFees(price: number,
                         freeThreshold: number): number {
-  const expeditionFeesRate = 0.009;
-  const expeditionFees = expeditionFeesRate * price;
-  return expeditionFees >= freeThreshold ? 0 : expeditionFees;
+  const shippingFeesRate = 0.009;
+  const shippingFees = shippingFeesRate * price;
+  return shippingFees >= freeThreshold ? 0 : shippingFees;
 }
 					</code></pre>
         </section>
@@ -251,13 +251,13 @@ const arbRange = fc.nat().chain(min => {
           <h2>Shrinking</h2>
           <p>Searching for the minimal failing case</p>
           <pre><code class="typescript" data-trim>
-// Expedition fees are 0.9 % of the price.
-// If the fees are above the threshold, expedition is free
+// Shipping fees are 0.9 % of the price.
+// If the fees are above the threshold, shipping is free
 export function getFees(price: number,
                         freeThreshold: number): number {
-  const expeditionFeesRate = 0.009;
-  const expeditionFees = expeditionFeesRate * price;
-  return expeditionFees >= freeThreshold ? 0 : expeditionFees;
+  const shippingFeesRate = 0.009;
+  const shippingFees = shippingFeesRate * price;
+  return shippingFees >= freeThreshold ? 0 : shippingFees;
 }
 					</code></pre>
           <pre><code data-trim class="typescript">
@@ -300,13 +300,13 @@ Received: 53.99999999999999
         <section>
           <h2>Don't copy/paste the implementation in the test</h2>
           <pre><code class="typescript" data-trim>
-// Expedition fees are 0.9 % of the price.
-// If the fees are above the threshold, expedition is free
+// shipping fees are 0.9 % of the price.
+// If the fees are above the threshold, shipping is free
 export function getFees(price: number,
                         freeThreshold: number): number {
-  const expeditionFeesRate = 0.009;
-  const expeditionFees = expeditionFeesRate * price;
-  return expeditionFees >= freeThreshold ? 0 : expeditionFees;
+  const shippingFeesRate = 0.009;
+  const shippingFees = shippingFeesRate * price;
+  return shippingFees >= freeThreshold ? 0 : shippingFees;
 }
 					</code></pre>
           <pre><code data-trim class="typescript">
