@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta
@@ -7,7 +7,7 @@
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
 
-    <title>Test de propriétés avec Fast-Check</title>
+    <title>Property Based testing with Fast-Check</title>
 
     <link rel="stylesheet" href="dist/reset.css" />
     <link rel="stylesheet" href="dist/reveal.css" />
@@ -20,7 +20,7 @@
         width: 95%;
       }
       .reveal pre code {
-        max-height: 600px;
+          max-height: 600px;
       }
     </style>
   </head>
@@ -28,16 +28,16 @@
     <div class="reveal">
       <div class="slides">
         <section>
-          <h1>Les tests de propriétés</h1>
+          <h1>Property based testing</h1>
 
           <img
             src="img/logo.png"
-            alt="logo de fast-check "
+            alt="fast-check's logo"
             style="position: relative; left: 50px"
           />
         </section>
         <section>
-          <h2>Qui suis je?</h2>
+          <h2>Who am I?</h2>
           <ul
             style="
               display: inline-block;
@@ -48,15 +48,13 @@
           >
             <li>Benoît Lemoine</li>
             <li>
-              Developpeur Fullstack<br />(TS, Scala, Rust, ...) <br />
-              Intérêt pour la programmation fonctionnelle et les systèmes de
-              type
-              <br />
+              Fullstack developer <br />(TS, Scala, Rust, ...) <br />
+              especially interested in functional programming and type
+              systems<br />
             </li>
-            <li>
-              Travaille chez <a href="https://www.busbud.com">Busbud</a>; on
-              recrute&nbsp;!
-            </li>
+              <li>
+                  Working at <a href="https://www.busbud.com">Busbud</a>; we're hiring!
+              </li>
             <li>
               <a href="https://lemoine-benoit.medium.com/"
                 >https://lemoine-benoit.medium.com/</a
@@ -70,53 +68,45 @@
           <img
             style="display: inline-block; width: 200px; vertical-align: top"
             src="img/Moloch.png"
-            alt="Le plus bel animal du monde"
+            alt="Most beautiful animal in the world: the Moloch (aka. thorny devil)"
           />
         </section>
 
         <section>
-          <h2>Les limites des tests basés sur l'exemple</h2>
+          <h2>"Example based" testing limitations</h2>
         </section>
 
         <section>
-          <h2>Story</h2>
-          <p class="fragment">
-            En tant que client, je veux payer 0.9% du prix total en frais
-            d'envoi sauf si les frais sont supérieurs ou égaux à un seuil
-            configurable, auquel cas, ils sont gratuits
-          </p>
-          <ul style="font-size: 90%">
-            <li class="fragment">Les frais sont 0$ si le prix total est 0$</li>
-            <li class="fragment">Les frais sont 0$ si le seuil est 0$</li>
-            <li class="fragment">
-              Les frais sont 9$ si le prix total est 1000$ et le seuil 10$
-            </li>
-            <li class="fragment">
-              Les frais sont 0$ si le prix total est 1000$ et le seuil 9$
-            </li>
-            <li class="fragment">
-              Les frais sont 0$ si le prix total est 1000$ et le seuil 7$
-            </li>
-          </ul>
+          <h2>Example</h2>
+          <pre><code class="typescript" data-trim>
+// Expedition fees are 0.9 % of the price.
+// If the fees are above the threshold, expedition is free
+export function getFees(price: number,
+                        freeThreshold: number): number {
+  const expeditionFeesRate = 0.009;
+  const expeditionFees = expeditionFeesRate * price;
+  return expeditionFees >= freeThreshold ? 0 : expeditionFees;
+}
+					</code></pre>
         </section>
 
         <section>
           <h2>Tests</h2>
           <pre><code data-trim class="typescript">
 describe("getFees", () => {
-  it("should return 0 if the price is 0", () => {
+  test("return 0 if the price is 0", () => {
     expect(getFees(0, 10)).toStrictEqual(0);
   });
-  it("should return 0 if the freeThreshold is 0", () => {
+  test("return 0 if the freeThreshold is 0", () => {
     expect(getFees(100, 0)).toStrictEqual(0);
   });
-  it("should return 0.9% of the price if the fees are below the threshold", () => {
+  test("return 0.9% of the price if the fees are below the threshold", () => {
     expect(getFees(1000, 10)).toStrictEqual(9);
   });
-  it("should return 0 if the fees are equal to the threshold", () => {
+  test("return 0 if the fees are equal to the threshold", () => {
     expect(getFees(1000, 9)).toStrictEqual(0);
   });
-  it("should return 0 if the fees are above to the threshold", () => {
+  test("return 0 if the fees are above to the threshold", () => {
     expect(getFees(1000, 7)).toStrictEqual(0);
   });
 });
@@ -124,41 +114,11 @@ describe("getFees", () => {
         </section>
 
         <section>
-          <h2>Implementation</h2>
-          <pre><code class="typescript" data-trim>
-export function getFees(price: number,
-                        threshold: number): number {
-  const shippingFeesRate = 0.009;
-  const shippingFees = shippingFeesRate * price;
-  return shippingFees >= threshold ? 0 : shippingFees;
-}
-					</code></pre>
-        </section>
-
-        <section>
-          <h2>Result</h2>
-          <pre><code data-trim class="haskell">
-Test Suites: 1 passed, 1 total
-Tests:       5 passed, 5 total
-Snapshots:   0 total
-Time:        2.618 s                  
-              </code></pre>
-        </section>
-
-        <section>
-          <h2>Mais... <span class="fragment">Bug en production...</span></h2>
-          <p class="fragment">
-            Le prix total était de 3000$ et le seuil de 27$, et j'ai du payer
-            des frais d'expédition!
-          </p>
-        </section>
-
-        <section>
-          <h2>Test</h2>
+          <h2>But... sometimes, it doesn't work</h2>
           <pre><code data-trim class="typescript">
-test("return 0 if it the fees are equal to the threshold", () => {
-  expect(getFees(3000, 27)).toStrictEqual(0);
-});
+  test("return 0 if it the fees are equal to the threshold", () => {
+        expect(getFees(3000, 27)).toStrictEqual(0);
+    });
 		  </code></pre>
           <pre class="fragment"><code data-trim class="typescript">
 getFees › return 0 if the fees are equal to the threshold
@@ -171,38 +131,24 @@ Received: 26.999999999999996
         </section>
 
         <section>
-          <h2>Analyse</h2>
-          <ul>
-            <li>
-              <code>getFees</code> fonctionne dans <em>presque</em> tous les cas
-            </li>
-            <li>
-              Impossible de tester <em>tous</em> les cas (ici, nécessiterait
-              2<sup>64</sup> * 2<sup>64</sup> tests)
-            </li>
-          </ul>
-        </section>
-
-        <section>
           <h2>
-            Comment trouver ces erreurs <em>avant</em> qu'elles n'arrivent en
-            production
+            How can we catch those kind of errors <em>before they happen in
+              production</em>?
           </h2>
-          <p class="fragment">Il faut trouver les examples invalides</p>
+
+          <p class="fragment">We must find invalid examples</p>
         </section>
 
         <section>
-          <h2>Comment trouver ces exemples&nbsp;?</h2>
+          <h2>How can we find such examples?</h2>
           <ul>
-            <li class="fragment">Génération aléatoire des valeurs de test</li>
-            <li class="fragment">
-              Exécution des tests un grand nombre de fois
-            </li>
+            <li class="fragment">Generate randomly the values to test</li>
+            <li class="fragment">Execute the tests a high number of times</li>
           </ul>
         </section>
 
         <section>
-          <h2>Les tests de propriétés - Property based testing</h2>
+          <h2>Property based testing</h2>
           <h3>Fast-Check</h3>
           <a href="https://github.com/dubzzz/fast-check"
             >https://github.com/dubzzz/fast-check</a
@@ -210,7 +156,7 @@ Received: 26.999999999999996
         </section>
 
         <section>
-          <h2>1<sup>er</sup> Exemple</h2>
+          <h2>Simple Example</h2>
           <pre><code data-trim class="typescript">
 test("return 0 if the threshold is 0", () => {
     fc.assert(
@@ -220,14 +166,10 @@ test("return 0 if the threshold is 0", () => {
     );
 });
 			  </code></pre>
-          <p class="fragment">
-            Quelque soit <code>price</code> un entier naturel,
-            <code>getFees(price, 0)</code> est toujours égal à 0
-          </p>
         </section>
 
         <section>
-          <h2>2<sup>eme</sup> example</h2>
+          <h2>Another example</h2>
           <pre><code data-trim class="typescript">
 test("return something smaller than the threshold", () => {
   fc.assert(
@@ -240,33 +182,15 @@ test("return something smaller than the threshold", () => {
   );
 });
 			  </code></pre>
-          <p class="fragment">
-            Quelque soit <code>price</code> et <code>threshold</code> 2 entiers
-            naturel, <code>getFees(price, threshold)</code> est toujours
-            inférieur à threshold
-          </p>
-        </section>
-
-        <section>
-          // TODO disgression sur la génération de string , une fonction devant
-          supporter toutes les strings (longueur , utf-8, emoji, etc.)
         </section>
 
         <section>
           <h2>Arbitraries</h2>
           <ul>
-            <li class="fragment">
-              fc.nat(), fc.integer(), fc.float(), fc.double(), etc.
-            </li>
-            <li class="fragment">
-              fc.string(), fc.asciiString(), fc.unicodeString(), etc.
-            </li>
-            <li class="fragment">
-              fc.ipV4(), fc.uuid(), fc.emailAddress(), etc.
-            </li>
-            <li class="fragment">
-              fc.array(anotherArbitrary), fc.func(anotherArbitrary), etc.
-            </li>
+            <li class="fragment">fc.nat(), fc.integer(), fc.float(), fc.double(), etc.</li>
+            <li class="fragment">fc.string(), fc.asciiString(), fc.unicodeString(), etc.</li>
+            <li class="fragment">fc.ipV4(), fc.uuid(), fc.emailAddress(), etc.</li>
+            <li class="fragment">fc.array(anotherArbitrary), fc.func(anotherArbitrary), etc.</li>
           </ul>
         </section>
 
@@ -276,9 +200,9 @@ test("return something smaller than the threshold", () => {
 type User = {id: string, age: number, email: string | null };
 
 const arbUser: Arbitrary&lt;User> = fc.record({
-  id: fc.uuid(),
-  age: fc.nat({max: 99}),
-  email: fc.option(fc.emailAddress())
+	id: fc.uuid(),
+    age: fc.nat({max: 99}),
+    email: fc.option(fc.emailAddress())
 });
 
 it('supports custom arbitrary', () => {
@@ -287,14 +211,7 @@ it('supports custom arbitrary', () => {
 });
 			  </code></pre>
         </section>
-
-        <section>
-          <h2>Manipulation des <code>Arbitraries</code></h2>
-          // TODO montrer map, // TODO montrer filter -> range ? // TODO montrer
-          chain -> range
-        </section>
-
-        <!--
+<!--
         <section>
           <h2>Arbitraries can be filtered for invalid values</h2>
           <pre><code data-trim class="typescript">
@@ -332,17 +249,19 @@ const arbRange = fc.nat().chain(min => {
 -->
         <section>
           <h2>Shrinking</h2>
-          <p>Chercher le cas d'erreur minimum</p>
+          <p>Searching for the minimal failing case</p>
           <pre><code class="typescript" data-trim>
+// Expedition fees are 0.9 % of the price.
+// If the fees are above the threshold, expedition is free
 export function getFees(price: number,
-                        threshold: number): number {
-  const shippingFeesRate = 0.009;
-  const shippingFees = shippingFeesRate * price;
-  return shippingFees >= threshold ? 0 : shippingFees;
+                        freeThreshold: number): number {
+  const expeditionFeesRate = 0.009;
+  const expeditionFees = expeditionFeesRate * price;
+  return expeditionFees >= freeThreshold ? 0 : expeditionFees;
 }
 					</code></pre>
           <pre><code data-trim class="typescript">
-fc.assert(
+ fc.assert(
   fc.property(fc.nat(), (n) => {
     expect(getFees(n * 1000, n * 9)).toStrictEqual(0);
   })
@@ -379,18 +298,20 @@ Received: 53.99999999999999
         </section>
 
         <section>
-          <h2>/!\ Ne pas copier/coller l'implémentation dans les tests</h2>
+          <h2>Don't copy/paste the implementation in the test</h2>
           <pre><code class="typescript" data-trim>
+// Expedition fees are 0.9 % of the price.
+// If the fees are above the threshold, expedition is free
 export function getFees(price: number,
-                        threshold: number): number {
-  const shippingFeesRate = 0.009;
-  const shippingFees = shippingFeesRate * price;
-  return shippingFees >= threshold ? 0 : shippingFees;
+                        freeThreshold: number): number {
+  const expeditionFeesRate = 0.009;
+  const expeditionFees = expeditionFeesRate * price;
+  return expeditionFees >= freeThreshold ? 0 : expeditionFees;
 }
 					</code></pre>
           <pre><code data-trim class="typescript">
- // N'échoue jamais
-fc.assert(
+ // this won't catch any error for example
+ fc.assert(
   fc.property(fc.nat(), (n) => {
     expect(getFees(n , n * 0.009)).toStrictEqual(0);
   })
@@ -399,24 +320,21 @@ fc.assert(
         </section>
 
         <section>
-          <h2>Quelques cas d'utilisation</h2>
-        </section>
-
-        <section>
+          <h2>Real use case</h2>
           <h3>Serialization / Deserialization</h3>
           <pre><code data-trim class="typescript">
 type Permission = {
   read:boolean, write: boolean, execution: boolean
 };
-const ser = ({read, write, execution}: Permission): number =>
-  (read ? 0b100 :0) + (write? 0b10 :0) + (execution? 1 :0);
-
-const deser = (permission: number): Permission => ({
-  read: !(permission & 0b100),
-  write: !(permission & 0b10),
-  execution: !(permission & 1)
-})
-
+function ser({read, write, execution}: Permission): number {
+	return (read ? 0b100 :0) + (write? 0b10 :0) +
+           (execution? 1 :0);
+}
+function deser(permission: number): Permission {
+	return { read: !(permission & 0b100),
+			  write: !(permission & 0b10),
+			  execution: !(permission & 1) }
+}
 		  </code></pre>
 
           <pre><code data-trim class="typescript">
@@ -429,6 +347,7 @@ test('ser and deser should be inverse of each other', () => {
         </section>
 
         <section>
+          <h2>Real use case</h2>
           <h3>Metamorphic Tests</h3>
           <pre><code data-trim class="typescript">
 function customSort(arr: number[]): number[] {
@@ -437,46 +356,41 @@ function customSort(arr: number[]): number[] {
 			</code></pre>
           <pre><code data-trim class="typescript">
 test('custom sort should be stable', () => {
-  fc.assert(fc.property(fc.array(fc.number()), (arr) => {
-    const shuffledArr = [...arr]
-              .sort(() => 0.5 - Math.random());
-    expect(customSort(arr)).toStrictEqual(
-      customSort(shuffledArr)
-    })
-  ))
+	fc.assert(fc.property(fc.array(fc.number()), (arr) => {
+      const shuffledArr = [...arr].sort(() => 0.5 - Math.random();
+      expect(customSort(arr)).toStrictEqual(
+        customSort(shuffledArr)
+      })
+	))
 })
 			</code></pre>
         </section>
-
+<!--
         <section>
-          <h3>Propriétés Algébriques</h3>
-          <pre><code data-trim class="typescript">
-test('Array forms a functor', () => {
-  fc.assert(
-    fc.property(fc.array(fc.number()), fc.func(fc.string()),
-    fc.func(fc.boolean), (arr, f1, f2) => {
-      expect(arr.map(f1).map(f2)).toStrictEqual(
-        arr.map(x => f2(f1(x)))
-      )
-  });
-})
+          <h2>Real use case</h2>
+          <h3>Algebraic Properties</h3>
+            <pre><code data-trim class="typescript">
+          test('Array forms a functor', () => {
+            fc.assert(
+              fc.property(fc.array(fc.number()), fc.func(fc.string()),
+              fc.func(fc.boolean), (arr, f1, f2) => {
+                expect(arr.map(f1).map(f2)).toStrictEqual(
+                  arr.map(x => f2(f1(x)))
+                )
+              });
+          })
             </code></pre>
         </section>
-
+-->
         <section>
-          <h3>Générer un objet de domaine</h3>
+          <h2>Real use case</h2>
+          <h3>Generating a domain object</h3>
           <pre><code data-trim class="typescript">
-type UserCreateInput = { age: number, name: string }
-const arbUserCreateInput: Arbitrary&lt;UserCreateInput> =
-  fc.record({
-    age: fc.nat({ max: 150 }),
-    name: fc.string({ maxLength: 100 })
-  });
-
+type UserCreateInput = {name: string}
 it('should persist the user in the database', () => {
   return fc.assert(
-   fc.asyncProperty(arbUserCreateInput, async (user) => {
-     expect(await saveUser(user)).toHaveProperty('id');
+   fc.asyncProperty(fc.string(), async (name) => {
+     expect(await saveUser({name})).toHaveProperty('id');
   })
 })
         </code></pre>
@@ -485,17 +399,17 @@ it('should persist the user in the database', () => {
         <section>
           <h2>Conclusion</h2>
           <ul>
-            <li>Utile dans le vrai monde (jest, javascript-algorithm, etc.)</li>
-            <li>Mais ralenti les tests - à utiliser avec parcimonie</li>
+            <li>Useful on the real world</li>
+            <li>But slow down the tests - use sparingly</li>
             <li>
-              Existe dans d'autre technologies&nbsp;: scalacheck (scala),
-              hypothesis (python), quickcheck (haskell), propcheck (ruby), etc.
+              Exists in other technologies: scalacheck (scala), hypothesis
+              (python), quickcheck (haskell), propcheck (ruby), etc.
             </li>
           </ul>
         </section>
 
         <section>
-          <h2>Questions&nbsp;?</h2>
+          <h2>Questions?</h2>
         </section>
       </div>
     </div>
