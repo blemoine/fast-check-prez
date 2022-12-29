@@ -18,7 +18,7 @@ describe("getExpeditionFees", () => {
     expect(getExpeditionFees(1000, 7)).toStrictEqual(0);
   });
 })
-/*
+
   it("should return 0 if it the fees are equal to the threshold", () => {
 //    expect(getExpeditionFees(3000, 27)).toStrictEqual(0);
   });
@@ -37,7 +37,7 @@ describe("getExpeditionFees", () => {
         expect(getExpeditionFees(price, threshold)).toBeLessThanOrEqual(
           threshold
         );
-      })
+      }), {numRuns:1}
     );
   });
 });

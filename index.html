@@ -306,10 +306,13 @@ const arbRange = fc.nat().map(min => [min, min + 10])
           <h2>Range?</h2>
           <h3>Filter</h3>
           <pre><code data-trim class="typescript">
-const arbRange = fc.tuple(fc.nat(), fc.nat()).filter(([min, max]) => {
-  return max >= min
-})
+const arbRange = fc.tuple(fc.nat(), fc.nat())
+              .filter(([min, max]) => max >= min)
               </code></pre>
+          <p class="fragment">
+            /!\ Si trop de cas sont filtrés, fast-check peut échouer car il ne
+            trouve pas assez de valeur pour exécuter les tests
+          </p>
         </section>
         <section>
           <h2>Range?</h2>
@@ -504,7 +507,7 @@ it('should persist the user in the database', () => {
   return fc.assert(
    fc.asyncProperty(arbUserCreateInput, async (user) => {
      expect(await saveUser(user)).toHaveProperty('id');
-  })
+  }, { numRuns:1 })
 })
         </code></pre>
         </section>
