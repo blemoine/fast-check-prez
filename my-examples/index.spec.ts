@@ -1,5 +1,16 @@
-import fc from "fast-check";
-import { getExpeditionFees } from "./index";
+import fc, {VerbosityLevel} from "fast-check";
+
+describe("text", () => {
+    test('trim should return a smaller string', () => {
+        fc.assert(
+            fc.property(fc.string(), (str) => {
+                expect(str.trim().length).toBeLessThanOrEqual(str.length)
+            })
+        );
+    })
+});
+
+/*
 
 describe("getExpeditionFees", () => {
   it("should return 0 if the price is 0", () => {
@@ -54,10 +65,11 @@ describe("property based", () => {
   });
 });
 
-/*
+/!*
 it("TODO", () => {
     // 3000 * 0.009 === 27
     expect(getExpeditionFees(3000, 27)).toStrictEqual(0);
   });
- */
+ *!/
 
+*/

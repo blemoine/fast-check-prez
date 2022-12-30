@@ -22,6 +22,12 @@
       .reveal pre code {
         max-height: 600px;
       }
+      .warning-box {
+        background-color: #fff3cd;
+        padding: 10px 5px;
+        border: 2px solid #ffe69c;
+        border-radius: 5px;
+      }
     </style>
   </head>
   <body>
@@ -48,7 +54,7 @@
           >
             <li>Benoît Lemoine</li>
             <li>
-              Developpeur Fullstack<br />(TS, Scala, Rust, ...) <br />
+              Développeur Fullstack<br />(TS, Scala, Rust, ...) <br />
               Intérêt pour la programmation fonctionnelle et les systèmes de
               type
               <br />
@@ -146,10 +152,11 @@ Time:        2.618 s
         </section>
 
         <section>
-          <h2>Mais... <span class="fragment">Bug en production...</span></h2>
+          <h2>La feature part en prod...</h2>
+          <h2 class="fragment">Mais bug en production...</h2>
           <p class="fragment">
-            Le prix total était de 3000$ et le seuil de 27$, et j'ai du payer
-            des frais d'expédition!
+            Le prix total était de 3000$ et le seuil de 27$, et l'utilisateur a
+            du payer des frais d'expédition&nbsp;!
           </p>
         </section>
 
@@ -176,7 +183,7 @@ Received: 26.999999999999996
             <li>
               <code>getFees</code> fonctionne dans <em>presque</em> tous les cas
             </li>
-            <li>
+            <li class="fragment">
               Impossible de tester <em>tous</em> les cas (ici, nécessiterait
               2<sup>64</sup> * 2<sup>64</sup> tests)
             </li>
@@ -248,8 +255,21 @@ test("return something smaller than the threshold", () => {
         </section>
 
         <section>
-          // TODO disgression sur la génération de string , une fonction devant
-          supporter toutes les strings (longueur , utf-8, emoji, etc.)
+          <h2>Autre example</h2>
+          <pre><code data-trim class="typescript">
+test('trim should return a smaller string', () => {
+  fc.assert(
+    fc.property(fc.string(), (str) => {
+      expect(str.trim().length)
+        .toBeLessThanOrEqual(str.length)
+    })
+  );
+})
+            </code></pre>
+          <p class="fragment">
+            Quelque soit <code>str</code> une <code>string</code>,<br />
+            <code>str.trim()</code> est toujours plus court que <code>str</code>
+          </p>
         </section>
 
         <section>
@@ -289,9 +309,17 @@ it('supports custom arbitrary', () => {
         </section>
 
         <section>
-          <h2>Manipulation des <code>Arbitraries</code></h2>
-          // TODO montrer map, // TODO montrer filter -> range ? // TODO montrer
-          chain -> range
+          <h2>Range?</h2>
+          <p>
+            On veut arbitrary qui genere une paire d'entier naturel, le 2eme
+            strictement plus grand que le premier
+          </p>
+          <ul>
+            <li><code>[1, 3]</code></li>
+            <li><code>[1748, 1749]</code></li>
+            <li><code>[2, 97381273]</code></li>
+            <li>etc.</li>
+          </ul>
         </section>
 
         <section>
@@ -299,17 +327,17 @@ it('supports custom arbitrary', () => {
           <h3>Map</h3>
           <pre><code data-trim class="typescript">
 const arbRange = fc.nat().map(min => [min, min + 10])
-  
-              </code></pre>
+          </code></pre>
         </section>
+
         <section>
           <h2>Range?</h2>
           <h3>Filter</h3>
           <pre><code data-trim class="typescript">
 const arbRange = fc.tuple(fc.nat(), fc.nat())
-              .filter(([min, max]) => max >= min)
+              .filter(([min, max]) => max > min)
               </code></pre>
-          <p class="fragment">
+          <p class="fragment warning-box">
             /!\ Si trop de cas sont filtrés, fast-check peut échouer car il ne
             trouve pas assez de valeur pour exécuter les tests
           </p>
@@ -324,42 +352,6 @@ const arbRange = fc.nat().chain(min => {
               </code></pre>
         </section>
 
-        <!--
-        <section>
-          <h2>Arbitraries can be filtered for invalid values</h2>
-          <pre><code data-trim class="typescript">
-const arbEven = fc.integer().filter(n => n % 2 === 0)
-			  </code></pre>
-          <p class="fragment">
-            Beware of "too much" filtering leading to fast-check not finding
-            enough test cases to work
-          </p>
-        </section>
-
-        <section>
-          <h2>Arbitraries form a functor</h2>
-          <h3>(there is a <code>map</code> method)</h3>
-          <pre><code data-trim class="typescript">
-const arbPrice = fc.nat().map(priceInCents => {
-  return Math.round(priceInCents * 100) / 100
-});
-			  </code></pre>
-        </section>
-
-        <section>
-          <h2>Arbitraries form a monad</h2>
-          <h3>
-            (there is a <code>chain</code> method and a
-            <code>constant</code> function)
-          </h3>
-          <pre><code data-trim class="typescript">
-// Generate a range [a,b] and ensure b > a
-const arbRange = fc.nat().chain(min => {
-  return fc.tuple(fc.constant(min), fc.integer({min})
-})
-			  </code></pre>
-        </section>
--->
         <section>
           <h2>Shrinking</h2>
           <p>Chercher le cas d'erreur minimum</p>
