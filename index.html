@@ -179,6 +179,26 @@ Received: 26.999999999999996
 
         <section>
           <h2>Analyse</h2>
+          <pre><code data-trim class="typescript">
+
+it("should return 0 if the fees are equal to the threshold", () => {
+  expect(getFees(1000, 9)).toStrictEqual(0);
+});
+
+				</code></pre>
+          <ul>
+            <li>Ce test est mal nommé</li>
+            <li class="fragment">
+              Il prouve que <code>getFees(1000,9)</code> vaut <code>0</code>
+            </li>
+            <li class="fragment">
+              Mais ne prouve rien du cas général, c'est un <em>exemple</em>
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Analyse</h2>
           <ul>
             <li>
               <code>getFees</code> fonctionne dans <em>presque</em> tous les cas
@@ -427,6 +447,7 @@ fc.assert(
         <section>
           <h3>Serialization / Deserialization</h3>
           <pre><code data-trim class="typescript">
+// eg.  7 -> RWX, 5 -> R_X, 1 -> R__
 type Permission = {
   read:boolean, write: boolean, execution: boolean
 };
@@ -502,6 +523,10 @@ it('should persist the user in the database', () => {
   }, { numRuns:1 })
 })
         </code></pre>
+        </section>
+
+        <section>
+          INTRODUIRE POURQUOI ON APPELLE CA DES TESTS DE PROPRIETES
         </section>
 
         <section>
