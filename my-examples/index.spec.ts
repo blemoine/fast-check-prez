@@ -1,13 +1,19 @@
 import fc, {VerbosityLevel} from "fast-check";
 
+function getFees(price: number, threshold: number): number {
+  const shippingFeesRate = 0.009;
+  const shippingFees = shippingFeesRate * price;
+  return shippingFees >= threshold ? 0 : shippingFees;
+}
+
 describe("text", () => {
-    test('trim should return a smaller string', () => {
-        fc.assert(
-            fc.property(fc.string(), (str) => {
-                expect(str.trim().length).toBeLessThanOrEqual(str.length)
-            })
-        );
-    })
+  test("trim should return a smaller string", () => {
+    fc.assert(
+      fc.property(fc.nat(), (n) => {
+        expect(getFees(n * 1000, n * 9)).toStrictEqual(0);
+      }), {verbose: VerbosityLevel.VeryVerbose}
+    );
+  });
 });
 
 /*

@@ -348,6 +348,25 @@ it('supports custom arbitrary', () => {
           <pre><code data-trim class="typescript">
 const arbRange = fc.nat().map(min => [min, min + 10])
           </code></pre>
+          <pre class="fragment"><code data-trim class="typescript">
+const arbRange = fc.tuple(fc.nat(), fc.nat())
+                  .map(([a, b]) => (a <= b ? [a, b] : [b, a]));
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Range?</h2>
+          <h3>Pre</h3>
+          <pre><code data-trim class="typescript">
+fc.property(fc.nat(), fc.nat(), (a, b) => {
+    fc.pre(a < b);
+    expect(a).toBeGreaterThanOrEqualTo(b);
+})
+              </code></pre>
+          <p class="fragment warning-box">
+            /!\ Si trop de cas sont filtrés, fast-check peut échouer car il ne
+            trouve pas assez de valeur pour exécuter les tests
+          </p>
         </section>
 
         <section>
@@ -357,10 +376,6 @@ const arbRange = fc.nat().map(min => [min, min + 10])
 const arbRange = fc.tuple(fc.nat(), fc.nat())
               .filter(([min, max]) => max > min)
               </code></pre>
-          <p class="fragment warning-box">
-            /!\ Si trop de cas sont filtrés, fast-check peut échouer car il ne
-            trouve pas assez de valeur pour exécuter les tests
-          </p>
         </section>
         <section>
           <h2>Range?</h2>
@@ -403,6 +418,43 @@ Got error: Error: expect(received).toStrictEqual(expected) // deep equality
 
 Expected: 0
 Received: 53.99999999999999
+              </code></pre>
+        </section>
+
+        <section>
+          <h2>Shrinking</h2>
+          <pre><code data-trim class="typescript">
+fc.assert(
+  fc.property(fc.nat(), (n) => {
+    expect(getFees(n * 1000, n * 9)).toStrictEqual(0);
+  }), { verbose:VerbosityLevel.VeryVerbose }
+);
+</code></pre>
+        </section>
+        <section>
+          <h2>Shrinking</h2>
+          <pre ><code data-trim style="font-size: 87%">
+Execution summary:
+√ [5]
+√ [174823198]
+× [49861]
+. √ [0]
+. . × [24931]
+. . . × [12466]
+. . . . × [6233]
+. . . . . × [3117]
+. . . . . . × [1559]
+. . . . . . . × [780]
+. . . . . . . . × [390]
+. . . . . . . . . × [195]
+. . . . . . . . . . × [98]
+. . . . . . . . . . . × [49]
+. . . . . . . . . . . . × [25]
+. . . . . . . . . . . . . × [13]
+. . . . . . . . . . . . . . × [7]
+. . . . . . . . . . . . . . . √ [4]
+. . . . . . . . . . . . . . . × [6]
+. . . . . . . . . . . . . . . . √ [5]
               </code></pre>
         </section>
 
